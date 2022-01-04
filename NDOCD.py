@@ -6,7 +6,7 @@ from time import time
 
 
 class NDOCD:
-    def __init__(self, graph, neighbours_edges=None, beta=0.3, MD_threshold=0.2, JS_threshold=0.2, modification=False, modification_percent=0.1, modification_number=10, modification_type="percent", weighted=False):
+    def __init__(self, graph, neighbours_edges=None, beta=0.3, MD_threshold=0.2, JS_threshold=0.2, modification=False, modification_percent=0.1, modification_number=10, modification_type="percent", weighted=False, remove_all=False):
         self.graph = graph
         self.n = graph.shape[0]
         self.beta = beta
@@ -23,6 +23,7 @@ class NDOCD:
         self.modification_percent = modification_percent
         self.modification_type = modification_type
         self.weighted = weighted
+        self.remove_all = remove_all
 
     def compute_degrees(self):
         degrees = self.sum_of_rows(self.graph)
@@ -151,9 +152,16 @@ class NDOCD:
         # print("graph: ", self.graph[non_zero_ind[0], non_zero_ind])
         # print("com: ", community.graph[non_zero_ind[0], non_zero_ind])
 
-        self.update_degrees(community)
+        # self.update_degrees(community)
         self.remove_neighbours_edges(community)
-        self.graph = self.graph - community.get_graph()
+        if self.remove_all:
+            indices = community.get_vertex_indices()
+            for index in indices:
+                self.graph[index] = 0
+        else:
+            self.graph = self.graph - community.get_graph()
+        self.degrees = self.compute_degrees()
+        # self.neighbours_edges = self.compute_neighbours_edges()
 
         # print(self.graph < 0)
         self.graph.eliminate_zeros()
